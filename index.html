@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>FarmVoiceStudio — Voice Field Logger &amp; Agri Tools</title>
+<meta name="description" content="Local-first agricultural voice logger and farm management assistant. Part of the Crisp Suite.">
+<meta name="theme-color" content="#090d16" id="metaThemeColor">
+<script src="https://cdn.tailwindcss.com"></script> 
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* Night Shift & Earthy Ergonomic Theme (Default) */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #090d16;
+  --card: #101726;
+  --ink: #e2e8f0;
+  --mute: #8a99b5;
+  --accent: #10b981; /* Emerald green theme for agriculture */
+  --accent-ink: #042f1e;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --line: #23314d;
+  --field: #0b111e;
+  --btn-bg: #19243b;
+  --btn-hover: #22314f;
+  --btn-line: #3f5580;
+}
+
+/* Day Shift / Light Mode */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f7fb;
+  --card: #ffffff;
+  --ink: #0f1a2e;
+  --mute: #53627d;
+  --accent: #059669;
+  --accent-ink: #ffffff;
+  --warn: #a16207;
+  --bad: #b91c1c;
+  --line: #cbd5e1;
+  --field: #f8fafd;
+  --btn-bg: #ffffff;
+  --btn-hover: #f1f5f9;
+  --btn-line: #94a3b8;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 'Plus Jakarta Sans', system-ui, sans-serif;
+  padding: 16px 12px 32px;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+button, input, textarea { font: inherit; color: inherit; }
+
+button {
+  cursor: pointer;
+  border: 1.5px solid var(--btn-line);
+  background: var(--btn-bg);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 10px 14px;
+  min-height: 44px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: all 0.15s ease;
+}
+button:hover:not(:disabled) {
+  background: var(--btn-hover);
+  border-color: var(--accent);
+}
+button.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: transparent;
+  font-weight: 700;
+}
+button.primary:hover:not(:disabled) { filter: brightness(1.08); }
+button.danger {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--bad);
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+input, textarea {
+  width: 100%;
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--ink);
+  outline: none;
+}
+input:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+label { display: block; font-size: 13px; color: var(--mute); margin-bottom: 4px; font-weight: 600; }
+
+header.top {
+  max-width: 900px;
+  margin: 0 auto 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.brand { font-weight: 800; color: var(--accent); font-size: 1.2rem; letter-spacing: -0.02em; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button { padding: 8px 14px; min-height: 38px; font-size: 14px; }
+.tabs button.on { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 700; }
+
+main { max-width: 900px; margin: 0 auto; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.hint { color: var(--mute); font-size: 13px; margin: 4px 0; }
+
+@media(max-width: 768px) {
+  .grid2 { grid-template-columns: 1fr; }
+  header.top { flex-direction: column; align-items: stretch; }
+  .tabs { justify-content: stretch; }
+  .tabs button { flex: 1; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <span class="brand">🌾 FarmVoiceStudio</span>
+    <p class="hint" style="margin:0;">Crisp Suite / HandleVault Utility</p>
+  </div>
+  <nav class="tabs" aria-label="Sections">
+    <button data-tab="logger" class="on">Voice Logger</button>
+    <button data-tab="tasks">Farm Tasks</button>
+    <button data-tab="guide">Crop Guide</button>
+  </nav>
+  <div class="row">
+    <button id="btnThemeToggle" type="button" style="padding:8px 12px;min-height:38px;font-size:13px;">🌙 Night Shift</button>
+  </div>
+</header>
+
+<main>
+  <!-- TAB 1: VOICE FIELD LOGGER -->
+  <section id="tab-logger">
+    <div class="card">
+      <h2 style="margin-top:0; font-size:16px; color:var(--accent);">Voice &amp; Text Field Logger</h2>
+      <p class="hint">Tap "Start Voice Recording" to dictate field observations hands-free, or type your notes directly.</p>
+      
+      <div style="margin: 16px 0;" class="row">
+        <button id="btnListen" class="primary" style="flex: 1;">🎙️ Start Voice Recording</button>
+        <button id="btnClearNote">Clear</button>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label for="noteInput">Observation / Log Content</label>
+        <textarea id="noteInput" rows="4" placeholder="e.g., Block A fertilized with urea, soil moisture is optimal..."></textarea>
+      </div>
+      <button id="btnSaveNote" class="primary">Save to Local Ledger</button>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0; font-size:16px; color:var(--accent);">Saved Field Logs</h2>
+      <div id="logsList" style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Dynamic logs -->
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: FARM TASKS -->
+  <section id="tab-tasks" hidden>
+    <div class="card">
+      <h2 style="margin-top:0; font-size:16px; color:var(--accent);">Farm Chores &amp; Schedule</h2>
+      <div class="row" style="margin-bottom: 16px;">
+        <input id="taskInput" type="text" placeholder="Add farming task (e.g., Water tomato patch)..." style="flex: 1;">
+        <button id="btnAddTask" class="primary">Add Task</button>
+      </div>
+      <div id="taskList" style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Dynamic Tasks -->
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: CROP GUIDE -->
+  <section id="tab-guide" hidden>
+    <div class="card">
+      <h2 style="margin-top:0; font-size:16px; color:var(--accent);">Offline Crop &amp; Pest Quick Guide</h2>
+      <div class="grid2">
+        <div style="background: var(--field); padding: 14px; border-radius: 10px; border: 1px solid var(--line);">
+          <strong style="color: var(--accent);">Rice (Palay)</strong>
+          <p class="hint">Ideal water level: 2–5 cm during vegetative stage. Drain field 7-10 days before harvest.</p>
+        </div>
+        <div style="background: var(--field); padding: 14px; border-radius: 10px; border: 1px solid var(--line);">
+          <strong style="color: var(--accent);">Corn (Mais)</strong>
+          <p class="hint">Requires well-drained loam soil. Sensitive to waterlogging during early germination.</p>
+        </div>
+        <div style="background: var(--field); padding: 14px; border-radius: 10px; border: 1px solid var(--line);">
+          <strong style="color: var(--accent);">Tomato (Kamatis)</strong>
+          <p class="hint">Needs consistent watering at the base to prevent blossom-end rot. Stake plants early.</p>
+        </div>
+        <div style="background: var(--field); padding: 14px; border-radius: 10px; border: 1px solid var(--line);">
+          <strong style="color: var(--accent);">Eggplant (Talong)</strong>
+          <p class="hint">Watch out for shoot and fruit borers. Prune lower yellow leaves for better airflow.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const THEME_KEY = 'farmvoicestudio_theme';
+  const btnTheme = document.getElementById('btnThemeToggle');
+  const metaTheme = document.getElementById('metaThemeColor');
+
+  function applyTheme(theme) {
+    const isLight = theme === 'light';
+    document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+    if (btnTheme) btnTheme.textContent = isLight ? '☀️ Day Shift' : '🌙 Night Shift';
+    if (metaTheme) metaTheme.setAttribute('content', isLight ? '#f4f7fb' : '#090d16');
+    localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
+  }
+
+  applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+  btnTheme.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'light' ? 'dark' : 'light');
+  });
+
+  const tabs = document.querySelectorAll('.tabs button');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('on'));
+      tab.classList.add('on');
+      const target = tab.dataset.tab;
+      document.querySelectorAll('main > section').forEach(sec => {
+        sec.hidden = sec.id !== `tab-${target}`;
+      });
+    });
+  });
+
+  // Voice Recognition Setup
+  const noteInput = document.getElementById('noteInput');
+  const btnListen = document.getElementById('btnListen');
+  const btnClearNote = document.getElementById('btnClearNote');
+  const btnSaveNote = document.getElementById('btnSaveNote');
+  const logsList = document.getElementById('logsList');
+
+  let recognition = null;
+  let isListening = false;
+
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US'; // Can be adjusted or spoken in local context
+
+    recognition.onresult = (event) => {
+      let transcript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      noteInput.value = transcript;
+    };
+
+    recognition.onerror = () => {
+      btnListen.textContent = '🎙️ Start Voice Recording';
+      isListening = false;
+    };
+
+    recognition.onend = () => {
+      btnListen.textContent = '🎙️ Start Voice Recording';
+      isListening = false;
+    };
+  }
+
+  btnListen.addEventListener('click', () => {
+    if (!recognition) {
+      alert('Speech recognition is not supported in this browser. You can type your notes directly.');
+      return;
+    }
+    if (isListening) {
+      recognition.stop();
+      btnListen.textContent = '🎙️ Start Voice Recording';
+      isListening = false;
+    } else {
+      recognition.start();
+      btnListen.textContent = '🔴 Listening... Speak now';
+      isListening = true;
+    }
+  });
+
+  btnClearNote.addEventListener('click', () => {
+    noteInput.value = '';
+  });
+
+  // Local Storage Logs
+  let logs = JSON.parse(localStorage.getItem('farm_voice_logs') || '[{"date": "2026-03-30", "text": "Inspected north paddy field. Water level is stable."}]');
+
+  function renderLogs() {
+    logsList.innerHTML = '';
+    if (logs.length === 0) {
+      logsList.innerHTML = '<p class="hint">No saved logs yet. Record or type an observation above.</p>';
+      return;
+    }
+    logs.forEach((log, idx) => {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.style.marginBottom = '8px';
+      div.style.padding = '12px 16px';
+      div.style.background = 'var(--field)';
+      
+      div.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <span style="font-size:12px; color:var(--accent); font-weight:700;">${log.date}</span>
+          <button class="danger" style="padding:2px 8px; min-height:28px; font-size:12px;" onclick="window.deleteLog(${idx})">Delete</button>
+        </div>
+        <p style="margin:0; font-size:15px;">${log.text}</p>
+      `;
+      logsList.appendChild(div);
+    });
+  }
+
+  window.deleteLog = (idx) => {
+    logs.splice(idx, 1);
+    localStorage.setItem('farm_voice_logs', JSON.stringify(logs));
+    renderLogs();
+  };
+
+  btnSaveNote.addEventListener('click', () => {
+    const val = noteInput.value.trim();
+    if (val) {
+      const today = new Date().toISOString().split('T')[0];
+      logs.unshift({ date: today, text: val });
+      localStorage.setItem('farm_voice_logs', JSON.stringify(logs));
+      noteInput.value = '';
+      renderLogs();
+    }
+  });
+
+  renderLogs();
+
+  // Tasks Logic
+  const taskInput = document.getElementById('taskInput');
+  const btnAddTask = document.getElementById('btnAddTask');
+  const taskList = document.getElementById('taskList');
+  let tasks = JSON.parse(localStorage.getItem('farm_tasks') || '["Check irrigation pump", "Apply organic pesticide on vegetables"]');
+
+  function renderTasks() {
+    taskList.innerHTML = '';
+    tasks.forEach((task, idx) => {
+      const div = document.createElement('div');
+      div.className = 'row';
+      div.style.justify = 'space-between';
+      div.style.background = 'var(--field)';
+      div.style.padding = '10px 14px';
+      div.style.borderRadius = '8px';
+      div.style.border = '1px solid var(--line)';
+      
+      const span = document.createElement('span');
+      span.textContent = task;
+      span.style.flex = '1';
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '✕';
+      delBtn.className = 'danger';
+      delBtn.style.padding = '4px 10px';
+      delBtn.style.minHeight = '32px';
+      delBtn.addEventListener('click', () => {
+        tasks.splice(idx, 1);
+        localStorage.setItem('farm_tasks', JSON.stringify(tasks));
+        renderTasks();
+      });
+
+      div.appendChild(span);
+      div.appendChild(delBtn);
+      taskList.appendChild(div);
+    });
+  }
+
+  btnAddTask.addEventListener('click', () => {
+    const val = taskInput.value.trim();
+    if (val) {
+      tasks.push(val);
+      localStorage.setItem('farm_tasks', JSON.stringify(tasks));
+      taskInput.value = '';
+      renderTasks();
+    }
+  });
+
+  renderTasks();
+})();
+</script>
+<script src="repo.js"></script>
+</body>
+</html>
